@@ -1,6 +1,9 @@
 # Resume Analyzer
 
 Compares a resume with a job description using the Gemini API. It returns a match score, matching skills, missing skills, and suggestions. It works as a command-line tool and as a small web app built with FastAPI.
+**Live demo:** https://resume-analyzer-r9rf.onrender.com
+
+The free server sleeps when idle, so the first load can take about a minute. The demo allows 10 analyses per day.
 
 ## How it works
 
@@ -41,3 +44,4 @@ To use your own resume, put the text in `resume.txt` and run `python analyze.py`
 - Building a FastAPI endpoint and a simple HTML page that calls it
 - Validating input and limiting usage on a public API
 - Keeping private files out of Git with .gitignore
+- Deploying a FastAPI app to the internet with Render
