@@ -2,41 +2,118 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Resume Analyzer</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; background: #f4f6f8; color: #1f2937; margin: 0; padding: 24px; }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    h1 { margin: 0 0 4px; }
+    .note { color: #6b7280; margin: 0 0 20px; }
+    .card { background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .card h3 { margin: 0 0 10px; }
+    textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; }
+    #upload-status { color: #4b5563; font-size: 14px; margin: 8px 0; min-height: 18px; }
+    button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 12px 28px; font-size: 16px; cursor: pointer; }
+    button:disabled { background: #93c5fd; cursor: wait; }
+    .error { color: #b91c1c; font-weight: 600; }
+    .score-box { text-align: center; }
+    .score-num { font-size: 56px; font-weight: 700; line-height: 1; }
+    .score-num small { font-size: 22px; color: #6b7280; font-weight: 400; }
+    .bar { height: 12px; background: #e5e7eb; border-radius: 6px; margin-top: 12px; overflow: hidden; }
+    .bar div { height: 100%; }
+    .good { color: #15803d; } .ok { color: #b45309; } .bad { color: #b91c1c; }
+    .bar .good { background: #22c55e; } .bar .ok { background: #f59e0b; } .bar .bad { background: #ef4444; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { padding: 5px 12px; border-radius: 999px; font-size: 14px; }
+    .tag.match { background: #dcfce7; color: #166534; }
+    .tag.miss { background: #fee2e2; color: #991b1b; }
+    .tips { margin: 0; padding-left: 20px; }
+    .tips li { margin-bottom: 10px; line-height: 1.45; }
+  </style>
 </head>
 <body>
-  <h1>Resume Analyzer</h1>
-  <p>Paste a resume and a job description. Don't paste anything private you don't want sent to Gemini.</p>
+  <div class="wrap">
+    <h1>Resume Analyzer</h1>
+    <p class="note">Paste a resume and a job description. Don't paste anything private you don't want sent to Gemini.</p>
 
-  <h3>Resume</h3>
-  <p>
-    Upload a PDF (up to 2 MB, first 5 pages) or paste the text below:
-    <input type="file" id="pdf" accept=".pdf,application/pdf" onchange="uploadPdf()">
-  </p>
-  <div id="upload-status"></div>
-  <textarea id="resume" rows="10" cols="80"></textarea>
+    <div class="card">
+      <h3>Resume</h3>
+      <div>
+        Upload a PDF (up to 2 MB, first 5 pages) or paste the text below:
+        <input type="file" id="pdf" accept=".pdf,application/pdf" onchange="uploadPdf()">
+      </div>
+      <div id="upload-status"></div>
+      <textarea id="resume" rows="10"></textarea>
+    </div>
 
-  <h3>Job description</h3>
-  <textarea id="job" rows="10" cols="80"></textarea>
+    <div class="card">
+      <h3>Job description</h3>
+      <textarea id="job" rows="10"></textarea>
+    </div>
 
-  <br><br>
-  <button onclick="run()">Analyze</button>
-  <div id="result"></div>
+    <button id="go" onclick="run()">Analyze</button>
+    <div id="result" style="margin-top:16px"></div>
+  </div>
 
   <script>
     const MAX_CHARS = 8000;
 
-    function addList(box, title, items) {
+    function makeCard(title) {
+      const card = document.createElement("div");
+      card.className = "card";
       const h = document.createElement("h3");
       h.textContent = title;
-      box.appendChild(h);
+      card.appendChild(h);
+      return card;
+    }
+
+    function addTags(box, title, items, cls) {
+      const card = makeCard(title);
+      const wrap = document.createElement("div");
+      wrap.className = "tags";
+      for (const item of items) {
+        const t = document.createElement("span");
+        t.className = "tag " + cls;
+        t.textContent = item;
+        wrap.appendChild(t);
+      }
+      if (items.length === 0) wrap.textContent = "None";
+      card.appendChild(wrap);
+      box.appendChild(card);
+    }
+
+    function addTips(box, title, items) {
+      const card = makeCard(title);
       const ul = document.createElement("ul");
+      ul.className = "tips";
       for (const item of items) {
         const li = document.createElement("li");
         li.textContent = item;
         ul.appendChild(li);
       }
-      box.appendChild(ul);
+      card.appendChild(ul);
+      box.appendChild(card);
+    }
+
+    function addScore(box, score) {
+      const level = score >= 70 ? "good" : score >= 40 ? "ok" : "bad";
+      const card = makeCard("Match score");
+      card.className = "card score-box";
+      const num = document.createElement("div");
+      num.className = "score-num " + level;
+      num.textContent = score;
+      const small = document.createElement("small");
+      small.textContent = " / 100";
+      num.appendChild(small);
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      const fill = document.createElement("div");
+      fill.className = level;
+      fill.style.width = Math.max(0, Math.min(100, score)) + "%";
+      bar.appendChild(fill);
+      card.appendChild(num);
+      card.appendChild(bar);
+      box.appendChild(card);
     }
 
     async function uploadPdf() {
@@ -50,9 +127,7 @@
         form.append("file", file);
         const r = await fetch("/extract-pdf", { method: "POST", body: form });
         let data = {};
-        try {
-          data = await r.json();
-        } catch (e) {}
+        try { data = await r.json(); } catch (e) {}
         if (!r.ok) {
           status.textContent = data.detail || "Could not read this PDF.";
           return;
@@ -73,7 +148,9 @@
 
     async function run() {
       const box = document.getElementById("result");
+      const btn = document.getElementById("go");
       box.textContent = "Analyzing...";
+      btn.disabled = true;
       try {
         const r = await fetch("/analyze", {
           method: "POST",
@@ -86,17 +163,20 @@
         const data = await r.json();
         box.textContent = "";
         if (!r.ok) {
-          box.textContent = data.detail || "Something went wrong.";
+          const err = document.createElement("div");
+          err.className = "card error";
+          err.textContent = data.detail || "Something went wrong.";
+          box.appendChild(err);
           return;
         }
-        const score = document.createElement("h2");
-        score.textContent = "Match score: " + data.match_score + " / 100";
-        box.appendChild(score);
-        addList(box, "Matching skills", data.matching_skills);
-        addList(box, "Missing skills", data.missing_skills);
-        addList(box, "Suggestions", data.suggestions);
+        addScore(box, data.match_score);
+        addTags(box, "Matching skills", data.matching_skills, "match");
+        addTags(box, "Missing skills", data.missing_skills, "miss");
+        addTips(box, "Suggestions", data.suggestions);
       } catch (e) {
         box.textContent = "Something went wrong. Try again later.";
+      } finally {
+        btn.disabled = false;
       }
     }
   </script>
