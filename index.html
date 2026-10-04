@@ -9,6 +9,11 @@
   <p>Paste a resume and a job description. Don't paste anything private you don't want sent to Gemini.</p>
 
   <h3>Resume</h3>
+  <p>
+    Upload a PDF (up to 2 MB, first 5 pages) or paste the text below:
+    <input type="file" id="pdf" accept=".pdf,application/pdf" onchange="uploadPdf()">
+  </p>
+  <div id="upload-status"></div>
   <textarea id="resume" rows="10" cols="80"></textarea>
 
   <h3>Job description</h3>
@@ -19,6 +24,8 @@
   <div id="result"></div>
 
   <script>
+    const MAX_CHARS = 8000;
+
     function addList(box, title, items) {
       const h = document.createElement("h3");
       h.textContent = title;
@@ -30,6 +37,38 @@
         ul.appendChild(li);
       }
       box.appendChild(ul);
+    }
+
+    async function uploadPdf() {
+      const input = document.getElementById("pdf");
+      const status = document.getElementById("upload-status");
+      const file = input.files[0];
+      if (!file) return;
+      status.textContent = "Reading PDF...";
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const r = await fetch("/extract-pdf", { method: "POST", body: form });
+        let data = {};
+        try {
+          data = await r.json();
+        } catch (e) {}
+        if (!r.ok) {
+          status.textContent = data.detail || "Could not read this PDF.";
+          return;
+        }
+        document.getElementById("resume").value = data.text;
+        const n = data.text.trim().length;
+        if (n > MAX_CHARS) {
+          status.textContent = "Loaded " + n + " characters, but the limit is " + MAX_CHARS + ". Please shorten the text before analyzing.";
+        } else {
+          status.textContent = "Loaded " + n + " characters. Check the text, then click Analyze.";
+        }
+      } catch (e) {
+        status.textContent = "Something went wrong. Try again later.";
+      } finally {
+        input.value = "";
+      }
     }
 
     async function run() {

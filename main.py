@@ -1,6 +1,8 @@
 import datetime
+import io
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+import pdfplumber
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from core import analyze
@@ -10,6 +12,8 @@ app = FastAPI()
 MIN_CHARS = 200
 MAX_CHARS = 8000
 DAILY_LIMIT = 10
+MAX_PDF_BYTES = 2 * 1024 * 1024
+MAX_PDF_PAGES = 5
 usage = {"day": "", "count": 0}
 
 
@@ -36,6 +40,27 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.post("/extract-pdf")
+def extract_pdf(file: UploadFile = File(...)):
+    if not (file.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Please upload a PDF file.")
+    data = file.file.read(MAX_PDF_BYTES + 1)
+    if len(data) > MAX_PDF_BYTES:
+        raise HTTPException(status_code=400, detail="The PDF is too large. Limit is 2 MB.")
+    text = ""
+    try:
+        with pdfplumber.open(io.BytesIO(data)) as pdf:
+            for page in pdf.pages[:MAX_PDF_PAGES]:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read this PDF.")
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="No readable text found. Scanned PDFs are not supported.")
+    return {"text": text}
 
 
 @app.post("/analyze")
