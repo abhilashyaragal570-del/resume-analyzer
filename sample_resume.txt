@@ -1,0 +1,19 @@
+poornima
+Junior Python Developer
+
+SKILLS
+Python, FastAPI, REST APIs, Git and GitHub, JSON, SQLite
+
+PROJECTS
+Weather Dashboard API
+Tools/Technologies: Python, FastAPI, SQLite
+- Built a REST API that returns weather data for a city and stores search history in SQLite.
+- Wrote simple tests for each endpoint.
+
+Study Notes Chatbot
+Tools/Technologies: Python, Gemini API
+- Built a command-line chatbot that answers questions about my study notes using the Gemini API.
+- Parsed JSON replies and added retries for API errors.
+
+EDUCATION
+B.Tech in Electronics and Communication, 2027

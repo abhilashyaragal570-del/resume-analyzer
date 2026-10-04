@@ -1,0 +1,29 @@
+Position Overview
+
+Role: Junior AI Engineer - Resume Analyzer
+Department: AI Engineering / Product Development
+Role Summary: You will help build and maintain the AI features of our resume parsing and matching tool. You will work with senior engineers to extract skills, experience, and education from resumes and compare candidates against job descriptions.
+
+Key Responsibilities
+
+- Document Parsing: Extract text from resumes in PDF and DOCX files and clean it for processing.
+- Information Extraction: Use LLM prompts to pull structured data (skills, experience, education) from resume text and return it as JSON.
+- Matching: Compare resume content with job descriptions using text embeddings and similarity scores.
+- LLM Integration: Help build simple retrieval-augmented generation (RAG) features and write clear prompts for summaries and match reports.
+- Testing: Check the accuracy of extracted data on sample resumes and report errors.
+- API Work: Build and maintain simple REST APIs that other teams can call.
+
+Required Skills
+
+- Good knowledge of Python (functions, classes, JSON, working with files).
+- Experience calling LLM APIs such as Gemini or OpenAI.
+- Basic understanding of embeddings and RAG.
+- Experience building simple APIs with FastAPI or Flask.
+- Comfortable with Git and GitHub.
+
+Nice to Have
+
+- Basic SQL.
+- Familiarity with spaCy, NLTK, or PDF libraries such as PyMuPDF or pdfplumber.
+- Experience deploying a small project (for example on Render).
+- Any project that shows your work, such as a GitHub repository or a live demo.
