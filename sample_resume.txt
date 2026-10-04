@@ -1,9 +1,8 @@
-poornima
+Anaswara 
 Junior Python Developer
 
 SKILLS
 Python, FastAPI, REST APIs, Git and GitHub, JSON, SQLite
-
 PROJECTS
 Weather Dashboard API
 Tools/Technologies: Python, FastAPI, SQLite
