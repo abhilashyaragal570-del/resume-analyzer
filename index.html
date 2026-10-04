@@ -52,11 +52,21 @@
     </div>
 
     <button id="go" onclick="run()">Analyze</button>
+<button id="clear" onclick="clearAll()" style="background:#6b7280; margin-left:8px;">Clear</button>
     <div id="result" style="margin-top:16px"></div>
   </div>
 
   <script>
     const MAX_CHARS = 8000;
+    
+    function clearAll() {
+      document.getElementById("resume").value = "";
+      document.getElementById("job").value = "";
+      document.getElementById("pdf").value = "";
+      document.getElementById("upload-status").textContent = "";
+      document.getElementById("result").textContent = "";
+    }
+
 
     function makeCard(title) {
       const card = document.createElement("div");
